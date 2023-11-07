@@ -7,7 +7,8 @@ A [nushell](https://www.nushell.sh/) plugin to make and play sounds
 * sound beep - play a beep sound
 * sound make - creates a noise with given frequency and duration
 * sound meta - get duration and meta data of an audio file
-* sound play - play an audio file, by default supports flac,Wav,mp3 and ogg files, install plugin with `all-decoders` feature to include aac and mp* (audio)
+* sound meta set - set id3 frame on the audio file (more about [id3 frames](https://docs.puddletag.net/source/id3.html))
+* sound play - play an audio file, by default supports flac,Wav,mp3 and ogg files, install plugin with `all-decoders` feature to include aac and mp4 (audio)
 
 ## Examples
 
