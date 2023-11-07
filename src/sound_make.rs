@@ -11,6 +11,11 @@ pub fn make_sound(call: &EvaluatedCall) -> Result<Value, LabeledError> {
         Err(value) => return value,
     };
 
+    sine_wave(frequency_value, duration_value, amplify_value);
+    Ok(Value::nothing(call.head))
+}
+
+pub fn sine_wave(frequency_value: f32, duration_value: Duration, amplify_value: f32) {
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
     let source = SineWave::new(frequency_value)
@@ -18,7 +23,6 @@ pub fn make_sound(call: &EvaluatedCall) -> Result<Value, LabeledError> {
         .amplify(amplify_value);
     sink.append(source);
     sink.sleep_until_end();
-    Ok(Value::nothing(call.head))
 }
 
 fn load_values(call: &EvaluatedCall) -> Result<(f32, Duration, f32), Result<Value, LabeledError>> {
