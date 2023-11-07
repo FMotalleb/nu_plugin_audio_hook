@@ -1,5 +1,5 @@
 use nu_plugin::{self, EvaluatedCall, LabeledError};
-use nu_protocol::{Category, FromValue, PluginSignature, Span, SyntaxShape, Value};
+use nu_protocol::{Category, PluginSignature, Span, SyntaxShape, Value};
 use rodio::source::{SineWave, Source};
 use rodio::{OutputStream, Sink};
 
