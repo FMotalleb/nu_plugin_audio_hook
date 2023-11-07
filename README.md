@@ -45,6 +45,21 @@ A [nushell](https://www.nushell.sh/) plugin to make and play sounds
 ╰──────────────┴────────────────────────────╯
 ```
 
+* to change an id3 frame you can use this command (more about [id3 frames](https://docs.puddletag.net/source/id3.html))
+
+```bash
+~> sound meta set audio.mp3 -k TPE1 -v new-artist
+╭──────────────┬────────────────────────────╮
+│ duration     │ 4min 5sec 551ms 20µs 408ns │
+│ artist       │ new-artist                 │
+│ title        │ TITLE                      │
+│ album        │ ALBUM                      │
+│ album_artist │ SINGER                     │
+│ track_no     │ 1                          │
+│ total_tracks │ 1                          │
+╰──────────────┴────────────────────────────╯
+```
+
 * to correctly play a mp3 audio file you need to first load its metadata and then use its duration to play it
 
 ```bash
