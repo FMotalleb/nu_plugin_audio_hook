@@ -6,7 +6,7 @@ keywords = ["nushell", "network", "plugin"]
 homepage = "https://github.com/FMotalleb/nu_plugin_audio_hook"
 repository = "https://github.com/FMotalleb/nu_plugin_audio_hook"
 description = "A nushell plugin to make and play sounds"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 readme = "README.md"
 

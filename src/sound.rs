@@ -40,6 +40,11 @@ impl Plugin for Sound {
                         description: "play a sound for its duration".to_string(),
                         example: "sound meta audio.mp4 | sound play audio.mp3 -d $in.duration".to_string(),
                         result: None,
+                    },  
+                    PluginExample {
+                        description: "set artist of `audio.mp3` to `new-artist`".to_string(),
+                        example: "sound meta set audio.mp3 -k TPE1 -v new-artist".to_string(),
+                        result: None,
                     },
                 ]
             ),
