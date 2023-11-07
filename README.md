@@ -25,8 +25,8 @@ A [nushell](https://www.nushell.sh/) plugin to make and play sounds
 ```bash
 git clone https://github.com/FMotalleb/nu_plugin_audio_hook.git
 cd nu_plugin_audio_hook
-cargo build -r
-register target/debug/nu_plugin_audio_hook --features=all-decoders
+cargo build -r --features=all-decoders
+register target/debug/nu_plugin_audio_hook 
 ```
 <!-- 
 * or using cargo
