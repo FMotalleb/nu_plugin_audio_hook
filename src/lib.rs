@@ -1,3 +1,4 @@
+mod audio_meta;
 mod audio_player;
 mod sound;
 mod sound_make;

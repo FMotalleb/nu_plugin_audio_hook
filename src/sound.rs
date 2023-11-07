@@ -4,6 +4,7 @@ use nu_plugin::{EvaluatedCall, LabeledError, Plugin};
 use nu_protocol::{Category, PluginSignature, SyntaxShape, Value};
 
 use crate::{
+    audio_meta::parse_meta,
     audio_player::play_audio,
     sound_make::{make_sound, sine_wave},
 };
@@ -31,12 +32,15 @@ impl Plugin for Sound {
                 )
                 .category(Category::Experimental),
             PluginSignature::build("sound beep").category(Category::Experimental),
+            PluginSignature::build("sound meta")
+                .required("File Path", SyntaxShape::Filepath, "file to play")
+                .category(Category::Experimental),
             PluginSignature::build("sound play")
                 .required("File Path", SyntaxShape::Filepath, "file to play")
                 .named(
                     "duration",
                     SyntaxShape::Duration,
-                    "duration of file (mandatory for non-wave formats like mp3)",
+                    "duration of file (mandatory for non-wave formats like mp3) (default 1 hour)",
                     Some('d'),
                 )
                 .category(Category::Experimental),
@@ -59,6 +63,7 @@ impl Plugin for Sound {
                 return Ok(Value::nothing(call.head));
             }
             "sound play" => play_audio(call),
+            "sound meta" => parse_meta(call),
             &_ => {
                 return Err(LabeledError {
                     label: "Command not found".to_string(),

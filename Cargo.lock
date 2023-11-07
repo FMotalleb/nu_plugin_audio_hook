@@ -213,9 +213,11 @@ checksum = "7f2c685bad3eb3d45a01354cedb7d5faa66194d1d58ba6e267a8de788f79db38"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "pure-rust-locales",
  "serde",
+ "wasm-bindgen",
  "windows-targets 0.48.5",
 ]
 
@@ -510,6 +512,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "id3"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9592fef083f91c77848100693b236275caf57ac48ed1fdfe44287cb727e0936"
+dependencies = [
+ "bitflags 2.4.1",
+ "byteorder",
+ "flate2",
 ]
 
 [[package]]
@@ -820,6 +833,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mp3-duration"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "348bdc7300502f0801e5b57c448815713cd843b744ef9bda252a2698fdf90a0f"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "ndk"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1001,6 +1023,9 @@ dependencies = [
 name = "nu_plugin_audio_hook"
 version = "0.1.0"
 dependencies = [
+ "chrono",
+ "id3",
+ "mp3-duration",
  "nu-plugin",
  "nu-protocol",
  "rodio",

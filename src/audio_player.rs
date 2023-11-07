@@ -50,13 +50,7 @@ pub fn play_audio(call: &EvaluatedCall) -> Result<Value, LabeledError> {
         Some(duration) => duration,
         None => match duration {
             Some(duration) => duration,
-            None => return Err(LabeledError {
-                label: "duration error".to_string(),
-                msg:
-                    "cannot get duration of audio file please provide a limited duration using (-d)"
-                        .to_string(),
-                span: Some(file_span),
-            }),
+            None => Duration::from_secs(3600),
         },
     };
 
