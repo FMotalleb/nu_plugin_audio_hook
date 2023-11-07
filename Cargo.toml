@@ -14,3 +14,9 @@ readme = "README.md"
 nu-plugin = "0.86.0"
 nu-protocol = { version = "0.86.0", features = ["plugin"] }
 rodio = { version = "0.17.3" }
+
+[profile.release]
+strip = true      # Automatically strip symbols from the binary.
+opt-level = "z"   # Optimize for size.
+lto = true
+codegen-units = 1

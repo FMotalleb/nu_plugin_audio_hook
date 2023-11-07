@@ -14,10 +14,10 @@ cd nu_plugin_audio_hook
 cargo build
 register target/debug/nu_plugin_audio_hook
 ```
-
+<!-- 
 * or using cargo
 
 ```bash
 cargo install nu_plugin_audio_hook
 register  ~/.cargo/bin/nu_plugin_audio_hook
-```
+``` -->
