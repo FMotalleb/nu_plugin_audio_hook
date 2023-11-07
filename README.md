@@ -28,10 +28,10 @@ cd nu_plugin_audio_hook
 cargo build -r --features=all-decoders
 register target/debug/nu_plugin_audio_hook 
 ```
-<!-- 
+
 * or using cargo
 
 ```bash
-cargo install nu_plugin_audio_hook
+cargo install nu_plugin_audio_hook -r --features=all-decoders
 register  ~/.cargo/bin/nu_plugin_audio_hook
-``` -->
+```

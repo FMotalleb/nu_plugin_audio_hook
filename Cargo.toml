@@ -14,7 +14,6 @@ readme = "README.md"
 rodio = { version = "0.17.3" }
 mp3-duration = { version = "0.1.10" }
 id3 = { version = "1.9.0" }
-chrono = { version = "*" }
 nu-plugin = "0.86.0"
 nu-protocol = { version = "0.86.0", features = ["plugin"] }
 
