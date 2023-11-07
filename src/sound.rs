@@ -4,7 +4,7 @@ use nu_plugin::{EvaluatedCall, LabeledError, Plugin};
 use nu_protocol::{record, Category, PluginExample, PluginSignature, SyntaxShape, Value};
 
 use crate::{
-    audio_meta::parse_meta,
+    audio_meta::{audio_meta_set, parse_meta},
     audio_player::play_audio,
     sound_make::{make_sound, sine_wave},
 };
@@ -69,8 +69,16 @@ impl Plugin for Sound {
                 )
                 .category(Category::Experimental),
             PluginSignature::build("sound beep")
-            .usage("play a beep sound")
-            .category(Category::Experimental),
+                .usage("play a beep sound")
+                .category(Category::Experimental)
+                .usage("play a beep sound")
+                .category(Category::Experimental),
+            PluginSignature::build("sound meta set") 
+                .usage("set a id3 frame on an audio file")
+                .required("File Path", SyntaxShape::Filepath, "file to update")
+                .required_named("key", SyntaxShape::String, "id3 key", Some('k'))
+                .required_named("value", SyntaxShape::String, "id3 value", Some('v'))
+                .category(Category::Experimental),
             PluginSignature::build("sound meta")
                 .required("File Path", SyntaxShape::Filepath, "file to play")
                 .usage("get duration and meta data of an audio file")
@@ -115,6 +123,7 @@ impl Plugin for Sound {
             }
             "sound play" => play_audio(call),
             "sound meta" => parse_meta(call),
+            "sound meta set" => audio_meta_set(call),
             &_ => Ok(Value::record(
                 record! {
                     "sound make {frequency} {duration} -a {amplify}"=>Value::string("creates a noise with given frequency and duration", call.head),

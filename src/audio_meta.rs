@@ -1,7 +1,7 @@
 use id3::{Tag, TagLike, Timestamp};
 use nu_plugin::{self, EvaluatedCall, LabeledError};
 use nu_protocol::{record, Record, Span, Value};
-use std::{fs::File, time::Duration};
+use std::{fs::File, path::PathBuf};
 
 pub fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     let (_, file_value) = match load_file(call) {
@@ -20,7 +20,7 @@ pub fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
 
     let duration = match mp3_duration::from_file(&file_value) {
         Ok(duration) => duration,
-        Err(_) => Duration::from_secs(0),
+        Err(err) => err.at_duration,
     };
     other.push(
         "duration",
@@ -50,6 +50,72 @@ pub fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     Ok(Value::record(other, call.head))
     // Ok(Value::nothing(call.head))
 }
+pub fn audio_meta_set(call: &EvaluatedCall) -> Result<Value, LabeledError> {
+    let (_, file_value) = match load_file(call) {
+        Ok(value) => value,
+        Err(value) => return value,
+    };
+    let key = match call.get_flag_value("key") {
+        Some(value) => match value.as_string() {
+            Ok(value) => value,
+            Err(err) => {
+                return Err(LabeledError {
+                    label: "cannot get value of key".to_string(),
+                    msg: err.to_string(),
+                    span: Some(value.span()),
+                })
+            }
+        },
+        None => {
+            return Err(LabeledError {
+                label: "cannot get value of key".to_string(),
+                msg: "set key using `-k` flag".to_string(),
+                span: None,
+            })
+        }
+    };
+    let value = match call.get_flag_value("value") {
+        Some(value) => match value.as_string() {
+            Ok(value) => value,
+            Err(err) => {
+                return Err(LabeledError {
+                    label: "cannot get value of value".to_string(),
+                    msg: err.to_string(),
+                    span: Some(value.span()),
+                })
+            }
+        },
+        None => {
+            return Err(LabeledError {
+                label: "cannot get value of `value`".to_string(),
+                msg: "set value using `-v` flag".to_string(),
+                span: None,
+            })
+        }
+    };
+    let tags = match Tag::read_from(file_value) {
+        Ok(tags) => Some(tags),
+        Err(_) => None,
+    };
+
+    if let Some(mut tags) = tags {
+        tags.set_text(key, value);
+
+        let (_, path) = match load_file_path(call) {
+            Ok(value) => value,
+            Err(value) => return value,
+        };
+        let tt = tags.write_to_path(path, tags.version());
+        if tt.is_err() {
+            return Err(LabeledError {
+                label: "error during writing".to_string(),
+                msg: tt.err().unwrap().to_string(),
+                span: None,
+            });
+        }
+    }
+    parse_meta(call)
+}
 fn insert_into_str(record: &mut Record, name: &str, val: Option<&str>, span: Span) {
     match val {
         Some(val) => record.push(name, Value::string(val, span)),
@@ -72,6 +138,25 @@ fn insert_into_integer(record: &mut Record, name: &str, val: Option<u32>, span: 
 fn load_file(
     call: &EvaluatedCall,
 ) -> Result<(nu_protocol::Span, File), Result<Value, LabeledError>> {
+    let (span, path) = match load_file_path(call) {
+        Ok(value) => value,
+        Err(value) => return Err(value),
+    };
+    let file_value: File = match File::open(path) {
+        Ok(file) => file,
+        Err(err) => {
+            return Err(Err(LabeledError {
+                label: "file value error".to_string(),
+                msg: err.to_string(),
+                span: Some(span),
+            }))
+        }
+    };
+    Ok((span, file_value))
+}
+fn load_file_path(
+    call: &EvaluatedCall,
+) -> Result<(nu_protocol::Span, PathBuf), Result<Value, LabeledError>> {
     let file: Value = match call.req(0) {
         Ok(value) => value,
         Err(err) => {
@@ -83,17 +168,10 @@ fn load_file(
         }
     };
     let file_span = file.span();
-    let file_value: File = match file.as_path() {
-        Ok(value) => match File::open(value) {
-            Ok(file) => file,
-            Err(err) => {
-                return Err(Err(LabeledError {
-                    label: "file value error".to_string(),
-                    msg: err.to_string(),
-                    span: Some(file_span),
-                }))
-            }
-        },
+    let mut loader = File::options();
+    loader.write(true);
+    let path_value: PathBuf = match file.as_path() {
+        Ok(value) => value,
         Err(err) => {
             return Err(Err(LabeledError {
                 label: "Frequency value must be of type Float (f32)".to_string(),
@@ -102,5 +180,5 @@ fn load_file(
             }))
         }
     };
-    Ok((file_span, file_value))
+    Ok((file_span, path_value))
 }
