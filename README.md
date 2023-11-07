@@ -33,5 +33,5 @@ register target/debug/nu_plugin_audio_hook
 
 ```bash
 cargo install nu_plugin_audio_hook --features=all-decoders
-register  ~/.cargo/bin/nu_plugin_audio_hook
+register ~/.cargo/bin/nu_plugin_audio_hook
 ```
