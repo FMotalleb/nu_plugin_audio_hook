@@ -3,7 +3,10 @@ use std::time::Duration;
 use nu_plugin::{EvaluatedCall, LabeledError, Plugin};
 use nu_protocol::{Category, PluginSignature, SyntaxShape, Value};
 
-use crate::sound_make::{make_sound, sine_wave};
+use crate::{
+    audio_player::play_audio,
+    sound_make::{make_sound, sine_wave},
+};
 
 // use crate::make_sound;
 
@@ -28,6 +31,10 @@ impl Plugin for Sound {
                 )
                 .category(Category::Experimental),
             PluginSignature::build("sound beep").category(Category::Experimental),
+            PluginSignature::build("sound play")
+                .required("File Path", SyntaxShape::Filepath, "file to play")
+                .named("duration", SyntaxShape::Duration, "play time", Some('d'))
+                .category(Category::Experimental),
         ]
     }
 
@@ -46,6 +53,7 @@ impl Plugin for Sound {
                 sine_wave(1000.0, Duration::from_millis(300), 1.0);
                 return Ok(Value::nothing(call.head));
             }
+            "sound play" => play_audio(call),
             &_ => {
                 return Err(LabeledError {
                     label: "Command not found".to_string(),
