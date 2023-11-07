@@ -722,6 +722,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mach"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b823e83b2affd8f40a9ee8c29dbc56404c1e34cd2710921f2801e2cf29527afa"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "mach2"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -780,6 +789,26 @@ name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
+
+[[package]]
+name = "minimp3-sys"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e21c73734c69dc95696c9ed8926a2b393171d98b3f5f5935686a26a487ab9b90"
+dependencies = [
+ "cc",
+]
+
+[[package]]
+name = "minimp3_fixed"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42b0f14e7e75da97ae396c2656b10262a3d4afa2ec98f35795630eff0c8b951b"
+dependencies = [
+ "minimp3-sys",
+ "slice-ring-buffer",
+ "thiserror",
+]
 
 [[package]]
 name = "miniz_oxide"
@@ -1285,6 +1314,7 @@ dependencies = [
  "cpal",
  "hound",
  "lewton",
+ "minimp3_fixed",
  "symphonia",
 ]
 
@@ -1378,6 +1408,17 @@ name = "shlex"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7cee0529a6d40f580e7a5e6c495c8fbfe21b7b52795ed4bb5e62cdf92bc6380"
+
+[[package]]
+name = "slice-ring-buffer"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcc8eb449302fd7a6672a999c6846311a43865aaec54083948b911829a20d893"
+dependencies = [
+ "libc",
+ "mach",
+ "winapi",
+]
 
 [[package]]
 name = "smallvec"
