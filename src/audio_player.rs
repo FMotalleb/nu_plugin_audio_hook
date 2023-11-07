@@ -10,39 +10,71 @@ pub fn play_audio(call: &EvaluatedCall) -> Result<Value, LabeledError> {
         Err(value) => return value,
     };
 
-    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+    let (_stream, stream_handle) = match OutputStream::try_default() {
+        Ok(value) => value,
+        Err(err) => {
+            return Err(LabeledError {
+                label: "audio stream exception".to_string(),
+                msg: err.to_string(),
+                span: Some(call.head),
+            })
+        }
+    };
     let file = BufReader::new(file_value);
-    let source = Decoder::new(file).unwrap();
+
+    let source = match Decoder::new(file) {
+        Ok(value) => value,
+        Err(err) => {
+            return Err(LabeledError {
+                label: "audio decoder exception".to_string(),
+                msg: err.to_string(),
+                span: Some(file_span),
+            })
+        }
+    };
+
     let duration = source.total_duration();
 
-    // Play the sound directly on the device
-    let _ = stream_handle.play_raw(source.convert_samples());
-    let opt_duration: Duration = match call.get_flag_value("duration") {
-        Some(duration) => match duration.as_duration() {
-            Ok(nanos) => Duration::from_nanos(nanos.try_into().unwrap()),
-            Err(err) => {
-                return Err(LabeledError {
-                    label: "duration error".to_string(),
-                    msg: err.to_string(),
-                    span: Some(file_span),
-                })
-            }
-        },
+    match stream_handle.play_raw(source.convert_samples()) {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(LabeledError {
+                label: "audio player exception".to_string(),
+                msg: err.to_string(),
+                span: Some(file_span),
+            })
+        }
+    }
+
+    let sleep_duration: Duration = match load_duration_from(call, "duration") {
+        Some(duration) => duration,
         None => match duration {
             Some(duration) => duration,
-            None => {
-                return Err(LabeledError {
-                    label: "duration error".to_string(),
-                    msg: "cannot get duration of audio file".to_string(),
-                    span: Some(file_span),
-                })
-            }
+            None => return Err(LabeledError {
+                label: "duration error".to_string(),
+                msg:
+                    "cannot get duration of audio file please provide a limited duration using (-d)"
+                        .to_string(),
+                span: Some(file_span),
+            }),
         },
     };
-    std::thread::sleep(opt_duration);
+
+    std::thread::sleep(sleep_duration);
     Ok(Value::nothing(call.head))
 }
-
+fn load_duration_from(call: &EvaluatedCall, name: &str) -> Option<Duration> {
+    match call.get_flag_value(name) {
+        Some(duration) => match duration.as_duration() {
+            Ok(nanos) => Some(Duration::from_nanos(match nanos.try_into() {
+                Ok(nanos) => nanos,
+                Err(_) => return None,
+            })),
+            Err(_) => None,
+        },
+        None => None,
+    }
+}
 fn load_file(
     call: &EvaluatedCall,
 ) -> Result<(nu_protocol::Span, File), Result<Value, LabeledError>> {

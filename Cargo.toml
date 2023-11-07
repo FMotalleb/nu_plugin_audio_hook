@@ -13,7 +13,7 @@ readme = "README.md"
 [dependencies]
 nu-plugin = "0.86.0"
 nu-protocol = { version = "0.86.0", features = ["plugin"] }
-rodio = { version = "0.17.3" }
+rodio = { version = "0.17.3", features = ["symphonia-all"] }
 
 [profile.release]
 strip = true      # Automatically strip symbols from the binary.

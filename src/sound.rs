@@ -33,7 +33,12 @@ impl Plugin for Sound {
             PluginSignature::build("sound beep").category(Category::Experimental),
             PluginSignature::build("sound play")
                 .required("File Path", SyntaxShape::Filepath, "file to play")
-                .named("duration", SyntaxShape::Duration, "play time", Some('d'))
+                .named(
+                    "duration",
+                    SyntaxShape::Duration,
+                    "duration of file (mandatory for non-wave formats like mp3)",
+                    Some('d'),
+                )
                 .category(Category::Experimental),
         ]
     }
