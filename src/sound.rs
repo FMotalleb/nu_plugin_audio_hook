@@ -6,7 +6,7 @@ use nu_protocol::{record, Category, PluginExample, PluginSignature, SyntaxShape,
 use crate::{
     audio_meta::{audio_meta_set, parse_meta},
     audio_player::play_audio,
-    sound_make::{make_sound, sine_wave},
+    sound_make::{make_sound, sine_wave}, constants::get_meta_records,
 };
 
 // use crate::make_sound;
@@ -88,6 +88,9 @@ impl Plugin for Sound {
                 .required("File Path", SyntaxShape::Filepath, "file to play")
                 .usage("get duration and meta data of an audio file")
                 .category(Category::Experimental),
+            PluginSignature::build("sound meta list")
+                .usage("list of all id3 frame")
+                .category(Category::Experimental),
             PluginSignature::build("sound play")
                 .usage("play an audio file, by default supports flac,Wav,mp3 and ogg files, install plugin with `all-decoders` feature to include aac and mp4(audio)")
                 .required("File Path", SyntaxShape::Filepath, "file to play")
@@ -129,6 +132,7 @@ impl Plugin for Sound {
             "sound play" => play_audio(call),
             "sound meta" => parse_meta(call),
             "sound meta set" => audio_meta_set(call),
+            "sound meta list" => Ok(get_meta_records(call.head)),
             &_ => Ok(Value::record(
                 record! {
                     "sound make {frequency} {duration} -a {amplify}"=>Value::string("creates a noise with given frequency and duration", call.head),

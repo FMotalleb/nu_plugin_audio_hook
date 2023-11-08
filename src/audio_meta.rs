@@ -1,7 +1,9 @@
-use id3::{Tag, TagLike, Timestamp};
+use id3::{Tag, TagLike};
 use nu_plugin::{self, EvaluatedCall, LabeledError};
 use nu_protocol::{record, Record, Span, Value};
 use std::{fs::File, path::PathBuf};
+
+use crate::constants::ID3_HASHMAP;
 
 pub fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     let (_, file_value) = match load_file(call) {
@@ -29,20 +31,30 @@ pub fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     // let info;
     match tags {
         Some(tags) => {
-            insert_into_str(&mut other, "artist", tags.artist(), call.head);
-            insert_into_str(&mut other, "title", tags.title(), call.head);
-            insert_into_str(&mut other, "genre", tags.genre(), call.head);
-            insert_into_str(&mut other, "album", tags.album(), call.head);
-            insert_into_str(&mut other, "album_artist", tags.album_artist(), call.head);
+            for (key, val) in ID3_HASHMAP.iter() {
+                if let Some(result) = tags.get(val) {
+                    insert_into_str(
+                        &mut other,
+                        key,
+                        Some(result.content().to_string()),
+                        call.head,
+                    )
+                }
+            }
+            // insert_into_str(&mut other, "artist", tags.artist(), call.head);
+            // insert_into_str(&mut other, "title", tags.title(), call.head);
+            // insert_into_str(&mut other, "genre", tags.genre(), call.head);
+            // insert_into_str(&mut other, "album", tags.album(), call.head);
+            // insert_into_str(&mut other, "album_artist", tags.album_artist(), call.head);
 
             insert_into_integer(&mut other, "track_no", tags.track(), call.head);
             insert_into_integer(&mut other, "total_tracks", tags.total_tracks(), call.head);
             insert_into_integer(&mut other, "disc_no", tags.disc(), call.head);
             insert_into_integer(&mut other, "total_discs", tags.total_discs(), call.head);
 
-            //TODO - need conversion
-            insert_into_date(&mut other, "date_recorded", tags.date_recorded(), call.head);
-            insert_into_date(&mut other, "date_released", tags.date_released(), call.head);
+            // //TODO - need conversion
+            // insert_into_date(&mut other, "date_recorded", tags.date_recorded(), call.head);
+            // insert_into_date(&mut other, "date_released", tags.date_released(), call.head);
         }
         None => {}
     }
@@ -116,18 +128,24 @@ pub fn audio_meta_set(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     }
     parse_meta(call)
 }
-fn insert_into_str(record: &mut Record, name: &str, val: Option<&str>, span: Span) {
+fn insert_into_str(
+    record: &mut Record,
+    name: impl AsRef<str>,
+    val: Option<impl AsRef<str>>,
+    span: Span,
+) {
     match val {
-        Some(val) => record.push(name, Value::string(val, span)),
+        Some(val) => record.push(name.as_ref(), Value::string(val.as_ref(), span)),
         None => {}
     }
 }
-fn insert_into_date(record: &mut Record, name: &str, val: Option<Timestamp>, span: Span) {
-    match val {
-        Some(val) => record.push(name, Value::string(val.to_string(), span)),
-        None => {}
-    }
-}
+
+// fn insert_into_date(record: &mut Record, name: &str, val: Option<Timestamp>, span: Span) {
+//     match val {
+//         Some(val) => record.push(name, Value::string(val.to_string(), span)),
+//         None => {}
+//     }
+// }
 fn insert_into_integer(record: &mut Record, name: &str, val: Option<u32>, span: Span) {
     match val {
         Some(val) => record.push(name, Value::int(val.into(), span)),

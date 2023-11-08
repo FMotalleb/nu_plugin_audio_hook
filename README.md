@@ -66,6 +66,77 @@ A [nushell](https://www.nushell.sh/) plugin to make and play sounds
 ~> sound meta audio.mp4 | sound play audio.mp3 -d $in.duration
 ```
 
+* to get all possible id3 frame names
+
+```bash
+~> sound meta list
+╭────┬─────────────────────────┬────────────╮
+│  # │       normalized        │ frame_name │
+├────┼─────────────────────────┼────────────┤
+│  0 │ audiolength             │ TLEN       │
+│  1 │ mood                    │ TMOO       │
+│  2 │ taggingtime             │ TDTG       │
+│  3 │ itunescompilationflag   │ TCMP       │
+│  4 │ time                    │ TIME       │
+│  5 │ wwwpayment              │ WPAY       │
+│  6 │ originalreleasetime     │ TDOR       │
+│  7 │ encodedby               │ TENC       │
+│  8 │ wwwcopyright            │ WCOP       │
+│  9 │ fileowner               │ TOWN       │
+│ 10 │ version                 │ TIT3       │
+│ 11 │ arranger                │ TPE4       │
+│ 12 │ albumsortorder          │ TSOA       │
+│ 13 │ copyright               │ TCOP       │
+│ 14 │ wwwradio                │ WORS       │
+│ 15 │ album                   │ TALB       │
+│ 16 │ conductor               │ TPE3       │
+│ 17 │ originalalbum           │ TOAL       │
+│ 18 │ encodingtime            │ TDEN       │
+│ 19 │ grouping                │ TIT1       │
+│ 20 │ radioowner              │ TRSO       │
+│ 21 │ bpm                     │ TBPM       │
+│ 22 │ audiosize               │ TSIZ       │
+│ 23 │ originalyear            │ TORY       │
+│ 24 │ initialkey              │ TKEY       │
+│ 25 │ language                │ TLAN       │
+│ 26 │ radiostationname        │ TRSN       │
+│ 27 │ wwwpublisher            │ WPUB       │
+│ 28 │ setsubtitle             │ TSST       │
+│ 29 │ organization            │ TPUB       │
+│ 30 │ composer                │ TCOM       │
+│ 31 │ producednotice          │ TPRO       │
+│ 32 │ wwwfileinfo             │ WOAF       │
+│ 33 │ year                    │ TDRC       │
+│ 34 │ encodingsettings        │ TSSE       │
+│ 35 │ itunesalbumsortorder    │ TSO2       │
+│ 36 │ date                    │ TDAT       │
+│ 37 │ mediatype               │ TMED       │
+│ 38 │ albumartist             │ TPE2       │
+│ 39 │ genre                   │ TCON       │
+│ 40 │ wwwcommercialinfo       │ WCOM       │
+│ 41 │ artist                  │ TPE1       │
+│ 42 │ isrc                    │ TSRC       │
+│ 43 │ itunescomposersortorder │ TSOC       │
+│ 44 │ originalartist          │ TOPE       │
+│ 45 │ performersortorder      │ TSOP       │
+│ 46 │ wwwsource               │ WOAS       │
+│ 47 │ lyricist                │ TEXT       │
+│ 48 │ author                  │ TOLY       │
+│ 49 │ audiodelay              │ TDLY       │
+│ 50 │ recordingdates          │ TRDA       │
+│ 51 │ releasetime             │ TDRL       │
+│ 52 │ filetype                │ TFLT       │
+│ 53 │ title                   │ TIT2       │
+│ 54 │ filename                │ TOFN       │
+│ 55 │ titlesortorder          │ TSOT       │
+│ 56 │ wwwartist               │ WOAR       │
+│ 57 │ discnumber              │ TPOS       │
+│ 58 │ track                   │ TRCK       │
+├────┼─────────────────────────┼────────────┤
+│  # │       normalized        │ frame_name │
+╰────┴─────────────────────────┴────────────╯
+```
+
 ## Installing
 
 * supported features:
