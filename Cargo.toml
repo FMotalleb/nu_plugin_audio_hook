@@ -2,7 +2,7 @@
 name = "nu_plugin_audio_hook"
 license = "MIT"
 authors = ["Motalleb Fallahnezhad <fmotalleb@gmail.com>"]
-keywords = ["nushell", "network", "plugin"]
+keywords = ["nushell", "audio", "mp3", "player", "plugin"]
 homepage = "https://github.com/FMotalleb/nu_plugin_audio_hook"
 repository = "https://github.com/FMotalleb/nu_plugin_audio_hook"
 description = "A nushell plugin to make and play sounds"
