@@ -101,9 +101,8 @@ A [nushell](https://www.nushell.sh/) plugin to make and play sounds
 * using [nupm](https://github.com/nushell/nupm)
 
 ```bash
-git clone https://github.com/FMotalleb/nu_plugin_port_scan.git
-cd nu_plugin_port_scan
-nupm install --path . -f
+git clone https://github.com/FMotalleb/nu_plugin_audio_hook.git
+nupm install --path nu_plugin_audio_hook -f
 ```
 
 * or compile manually
