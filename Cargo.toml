@@ -1,30 +1,26 @@
-[package]
-name = "nu_plugin_audio_hook"
-license = "MIT"
-authors = ["Motalleb Fallahnezhad <fmotalleb@gmail.com>"]
-keywords = ["nushell", "audio", "mp3", "player", "plugin"]
-homepage = "https://github.com/FMotalleb/nu_plugin_audio_hook"
-repository = "https://github.com/FMotalleb/nu_plugin_audio_hook"
-description = "A nushell plugin to make and play sounds"
-version = "0.1.4"
-edition = "2021"
-readme = "README.md"
-
 [dependencies]
-lazy_static = { version = "1.4.0" }
-rodio = { version = "0.17.3" }
-mp3-duration = { version = "0.1.10" }
-id3 = { version = "1.9.0" }
-nu-plugin = "0.87.0"
-nu-protocol = { version = "0.87.0", features = ["plugin"] }
+nu-plugin = "0.87.1"
+
+[dependencies.id3]
+version = "1.10.0"
+
+[dependencies.lazy_static]
+version = "1.4.0"
+
+[dependencies.mp3-duration]
+version = "0.1.10"
+
+[dependencies.nu-protocol]
+features = ["plugin"]
+version = "0.87.1"
+
+[dependencies.rodio]
+version = "0.17.3"
 
 [features]
-default = ["flac", "vorbis", "wav", "symphonia-mp3"]
 all-decoders = ["default", "symphonia-all"]
-
+default = ["flac", "vorbis", "wav", "symphonia-mp3"]
 flac = ["rodio/flac"]
-vorbis = ["rodio/vorbis"]
-wav = ["rodio/wav"]
 minimp3 = ["rodio/minimp3"]
 symphonia-aac = ["rodio/symphonia-aac"]
 symphonia-all = ["rodio/symphonia-all"]
@@ -33,9 +29,23 @@ symphonia-isomp4 = ["rodio/symphonia-isomp4"]
 symphonia-mp3 = ["rodio/symphonia-mp3"]
 symphonia-vorbis = ["rodio/symphonia-vorbis"]
 symphonia-wav = ["rodio/symphonia-wav"]
+vorbis = ["rodio/vorbis"]
+wav = ["rodio/wav"]
+
+[package]
+authors = ["Motalleb Fallahnezhad <fmotalleb@gmail.com>"]
+description = "A nushell plugin to make and play sounds"
+edition = "2021"
+homepage = "https://github.com/FMotalleb/nu_plugin_audio_hook"
+keywords = ["nushell", "audio", "mp3", "player", "plugin"]
+license = "MIT"
+name = "nu_plugin_audio_hook"
+readme = "README.md"
+repository = "https://github.com/FMotalleb/nu_plugin_audio_hook"
+version = "0.1.5"
 
 [profile.release]
-strip = true      # Automatically strip symbols from the binary.
-opt-level = "z"   # Optimize for size.
-lto = true
 codegen-units = 1
+lto = true
+opt-level = "z"
+strip = true
