@@ -1,16 +1,87 @@
 use id3::{Tag, TagLike};
-use nu_plugin::{self, EvaluatedCall, LabeledError};
-use nu_protocol::{record, Record, Span, Value};
+use nu_plugin::{self, EvaluatedCall, SimplePluginCommand};
+use nu_protocol::{record, Category, LabeledError, Record, Signature, Span, SyntaxShape, Value};
 use std::{fs::File, path::PathBuf};
 
-use crate::constants::ID3_HASHMAP;
+use crate::{
+    constants::{get_meta_records, ID3_HASHMAP},
+    Sound,
+};
+pub struct SoundMetaSetCmd;
+impl SimplePluginCommand for SoundMetaSetCmd {
+    type Plugin = Sound;
 
-pub fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
+    fn name(&self) -> &str {
+        "sound meta set"
+    }
+
+    fn signature(&self) -> nu_protocol::Signature {
+        Signature::new("sound meta set")
+            .required("File Path", SyntaxShape::Filepath, "file to update")
+            .required_named("key", SyntaxShape::String, "id3 key", Some('k'))
+            .required_named("value", SyntaxShape::String, "id3 value", Some('v'))
+            .category(Category::Experimental)
+    }
+
+    fn usage(&self) -> &str {
+        "set a id3 frame on an audio file"
+    }
+
+    fn run(
+        &self,
+        _plugin: &Self::Plugin,
+        _engine: &nu_plugin::EngineInterface,
+        call: &EvaluatedCall,
+        _input: &Value,
+    ) -> Result<Value, nu_protocol::LabeledError> {
+        audio_meta_set(call)
+    }
+}
+
+pub struct SoundMetaGetCmd;
+impl SimplePluginCommand for SoundMetaGetCmd {
+    type Plugin = Sound;
+
+    fn name(&self) -> &str {
+        "sound meta"
+    }
+
+    fn signature(&self) -> Signature {
+        Signature::new("sound meta")
+            .named(
+                "all",
+                SyntaxShape::Nothing,
+                "List all possible frame names",
+                Some('a'),
+            )
+            .required("File Path", SyntaxShape::Filepath, "file to play")
+            .category(Category::Experimental)
+    }
+
+    fn usage(&self) -> &str {
+        "get duration and meta data of an audio file"
+    }
+
+    fn run(
+        &self,
+        _plugin: &Self::Plugin,
+        _engine: &nu_plugin::EngineInterface,
+        call: &EvaluatedCall,
+        _input: &Value,
+    ) -> Result<Value, nu_protocol::LabeledError> {
+        if let Ok(true) = call.has_flag("all") {
+            return Ok(get_meta_records(call.head));
+        }
+        parse_meta(call)
+    }
+}
+
+fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     let (_, file_value) = match load_file(call) {
         Ok(value) => value,
         Err(value) => return value,
     };
-    let tags = match Tag::read_from(file_value) {
+    let tags = match Tag::read_from2(file_value) {
         Ok(tags) => Some(tags),
         Err(_) => None,
     };
@@ -62,50 +133,27 @@ pub fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     Ok(Value::record(other, call.head))
     // Ok(Value::nothing(call.head))
 }
-pub fn audio_meta_set(call: &EvaluatedCall) -> Result<Value, LabeledError> {
+
+fn audio_meta_set(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     let (_, file_value) = match load_file(call) {
         Ok(value) => value,
         Err(value) => return value,
     };
     let key = match call.get_flag_value("key") {
-        Some(value) => match value.as_string() {
-            Ok(value) => value,
-            Err(err) => {
-                return Err(LabeledError {
-                    label: "cannot get value of key".to_string(),
-                    msg: err.to_string(),
-                    span: Some(value.span()),
-                })
-            }
-        },
-        None => {
-            return Err(LabeledError {
-                label: "cannot get value of key".to_string(),
-                msg: "set key using `-k` flag".to_string(),
-                span: None,
-            })
+        Some(Value::String { val, .. }) => val,
+        _ => {
+            return Err(LabeledError::new("set key using `-k` flag".to_string())
+                .with_label("cannot get value of key", call.head));
         }
     };
     let value = match call.get_flag_value("value") {
-        Some(value) => match value.as_string() {
-            Ok(value) => value,
-            Err(err) => {
-                return Err(LabeledError {
-                    label: "cannot get value of value".to_string(),
-                    msg: err.to_string(),
-                    span: Some(value.span()),
-                })
-            }
-        },
-        None => {
-            return Err(LabeledError {
-                label: "cannot get value of `value`".to_string(),
-                msg: "set value using `-v` flag".to_string(),
-                span: None,
-            })
+        Some(Value::String { val, .. }) => val,
+        _ => {
+            return Err(LabeledError::new("set value using `-v` flag".to_string())
+                .with_label("cannot get value of value", call.head));
         }
     };
-    let tags = match Tag::read_from(file_value) {
+    let tags = match Tag::read_from2(file_value) {
         Ok(tags) => Some(tags),
         Err(_) => None,
     };
@@ -119,11 +167,8 @@ pub fn audio_meta_set(call: &EvaluatedCall) -> Result<Value, LabeledError> {
         };
         let tt = tags.write_to_path(path, tags.version());
         if tt.is_err() {
-            return Err(LabeledError {
-                label: "error during writing".to_string(),
-                msg: tt.err().unwrap().to_string(),
-                span: None,
-            });
+            return Err(LabeledError::new(tt.err().unwrap().to_string())
+                .with_label("error during writing", call.head));
         }
     }
     parse_meta(call)
@@ -163,11 +208,9 @@ fn load_file(
     let file_value: File = match File::open(path) {
         Ok(file) => file,
         Err(err) => {
-            return Err(Err(LabeledError {
-                label: "file value error".to_string(),
-                msg: err.to_string(),
-                span: Some(span),
-            }))
+            return Err(Err(
+                LabeledError::new(err.to_string()).with_label("file value error", span)
+            ))
         }
     };
     Ok((span, file_value))
@@ -178,25 +221,16 @@ fn load_file_path(
     let file: Value = match call.req(0) {
         Ok(value) => value,
         Err(err) => {
-            return Err(Err(LabeledError {
-                label: "Frequency value not found".to_string(),
-                msg: err.to_string(),
-                span: Some(call.head),
-            }))
+            return Err(Err(LabeledError::new(err.to_string())
+                .with_label("Frequency value not found", call.head)))
         }
     };
     let file_span = file.span();
     let mut loader = File::options();
     loader.write(true);
-    let path_value: PathBuf = match file.as_path() {
-        Ok(value) => value,
-        Err(err) => {
-            return Err(Err(LabeledError {
-                label: "Frequency value must be of type Float (f32)".to_string(),
-                msg: err.to_string(),
-                span: Some(file_span),
-            }))
-        }
+    let path_value: PathBuf = match file {
+        Value::String { val, .. } => PathBuf::from(val),
+        _ => return Err(Err(LabeledError::new("cannot get file path".to_string()))),
     };
     Ok((file_span, path_value))
 }
