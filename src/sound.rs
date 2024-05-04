@@ -1,13 +1,9 @@
-use std::time::Duration;
-
-use nu_plugin::{EvaluatedCall, LabeledError, Plugin};
-use nu_protocol::{record, Category, PluginExample, PluginSignature, SyntaxShape, Value};
+use nu_plugin::Plugin;
 
 use crate::{
-    audio_meta::{audio_meta_set, parse_meta, SoundMetaGetCmd, SoundMetaSetCmd},
-    audio_player::{play_audio, SoundPlayCmd},
-    constants::get_meta_records,
-    sound_make::{make_sound, sine_wave, SoundMakeCmd},
+    audio_meta::{SoundMetaGetCmd, SoundMetaSetCmd},
+    audio_player::SoundPlayCmd,
+    sound_make::{SoundBeepCmd, SoundMakeCmd},
 };
 
 // use crate::make_sound;
@@ -20,6 +16,7 @@ impl Plugin for Sound {
         vec![
             Box::new(SoundPlayCmd {}),
             Box::new(SoundMakeCmd {}),
+            Box::new(SoundBeepCmd {}),
             Box::new(SoundMetaGetCmd {}),
             Box::new(SoundMetaSetCmd {}),
         ]

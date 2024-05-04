@@ -1,5 +1,5 @@
-use nu_plugin::{self, EvaluatedCall, LabeledError, PluginCommand, SimplePluginCommand};
-use nu_protocol::{Signature, Span, Value};
+use nu_plugin::{self, EvaluatedCall, SimplePluginCommand};
+use nu_protocol::{Category, Example, LabeledError, Signature, Span, SyntaxShape, Value};
 use rodio::source::{SineWave, Source};
 use rodio::{OutputStream, Sink};
 
@@ -18,52 +18,78 @@ impl SimplePluginCommand for SoundMakeCmd {
 
     fn signature(&self) -> nu_protocol::Signature {
         Signature::new("sound make")
-                .required("Frequency", SyntaxShape::Float, "Frequency of the noise")
-                .required("duration", SyntaxShape::Duration, "duration of the noise")
-                .named(
-                    "amplify",
-                    SyntaxShape::Float,
-                    "amplify the sound by given value",
-                    Some('a'),
-                ).named(
-                    "beep",
-                    SyntaxShape::Float,
-                    "just a beep sound",
-                    Some('b'),
-                )
-                .plugin_examples(
-                    vec![
-                        PluginExample {
-                            description: "create a simple noise frequency".to_string(),
-                            example: "sound make 1000 200ms".to_string(),
-                            result: None,
-                        },
-                        PluginExample {
-                            description: "create a simple noise sequence".to_string(),
-                            example: "[ 300.0, 500.0,  1000.0, 400.0, 600.0 ] | each { |it| sound make $it 150ms }".to_string(),
-                            result: None,
-                        },
-                    ]
-                )
-                .category(Category::Experimental)
+            .required("Frequency", SyntaxShape::Float, "Frequency of the noise")
+            .required("duration", SyntaxShape::Duration, "duration of the noise")
+            .named(
+                "amplify",
+                SyntaxShape::Float,
+                "amplify the sound by given value",
+                Some('a'),
+            )
+            .category(Category::Experimental)
     }
-
+    fn examples(&self) -> Vec<Example> {
+        vec![
+            Example {
+                description: "create a simple noise frequency",
+                example: "sound make 1000 200ms",
+                result: None,
+            },
+            Example {
+                description: "create a simple noise sequence",
+                example:
+                    "[ 300.0, 500.0,  1000.0, 400.0, 600.0 ] | each { |it| sound make $it 150ms }",
+                result: None,
+            },
+        ]
+    }
     fn usage(&self) -> &str {
         "creates a noise with given frequency and duration"
     }
 
     fn run(
         &self,
-        plugin: &Self::Plugin,
-        engine: &nu_plugin::EngineInterface,
+        _plugin: &Self::Plugin,
+        _engine: &nu_plugin::EngineInterface,
         call: &EvaluatedCall,
-        input: &Value,
+        _input: &Value,
     ) -> Result<Value, nu_protocol::LabeledError> {
-        if let Ok(true) = call.has_flag("beep") {
-            sine_wave(1000.0, Duration::from_millis(300), 1.0);
-            return Ok(Value::nothing(call.head));
-        }
         make_sound(call)
+    }
+}
+
+pub struct SoundBeepCmd;
+
+impl SimplePluginCommand for SoundBeepCmd {
+    type Plugin = Sound;
+
+    fn name(&self) -> &str {
+        "sound beep"
+    }
+
+    fn signature(&self) -> nu_protocol::Signature {
+        Signature::new("sound beep").category(Category::Experimental)
+    }
+    fn examples(&self) -> Vec<Example> {
+        vec![Example {
+            description: "create a simple beep sound",
+            example: "sound beep",
+            result: None,
+        }]
+    }
+    fn usage(&self) -> &str {
+        "creates a beep noise"
+    }
+
+    fn run(
+        &self,
+        _plugin: &Self::Plugin,
+        _engine: &nu_plugin::EngineInterface,
+        call: &EvaluatedCall,
+        _input: &Value,
+    ) -> Result<Value, nu_protocol::LabeledError> {
+        sine_wave(1000.0, Duration::from_millis(300), 1.0);
+        return Ok(Value::nothing(call.head));
     }
 }
 
@@ -91,64 +117,52 @@ fn load_values(call: &EvaluatedCall) -> Result<(f32, Duration, f32), Result<Valu
     let frequency: Value = match call.req(0) {
         Ok(value) => value,
         Err(err) => {
-            return Err(Err(LabeledError {
-                label: "Frequency value not found".to_string(),
-                msg: err.to_string(),
-                span: Some(call.head),
-            }))
+            return Err(Err(LabeledError::new(err.to_string())
+                .with_label("Frequency value not found", call.head)))
         }
     };
     let frequency_value: f32 = match frequency.as_f64() {
         Ok(value) => value as f32,
         Err(err) => {
-            return Err(Err(LabeledError {
-                label: "Frequency value must be of type Float (f32)".to_string(),
-                msg: err.to_string(),
-                span: Some(frequency.span()),
-            }))
+            return Err(Err(LabeledError::new(err.to_string()).with_label(
+                "Frequency value must be of type Float (f32)",
+                frequency.span(),
+            )))
         }
     };
     let duration: Value = match call.req(1) {
         Ok(value) => value,
         Err(err) => {
-            return Err(Err(LabeledError {
-                label: "Duration value not found".to_string(),
-                msg: err.to_string(),
-                span: Some(call.head),
-            }))
+            return Err(Err(LabeledError::new(err.to_string())
+                .with_label("Duration value not found", call.head)))
         }
     };
-    let duration_value: Duration = match duration.as_duration() {
-        Ok(value) => Duration::from_nanos(value.try_into().unwrap_or(0)),
-        Err(err) => {
-            return Err(Err(LabeledError {
-                label: "Frequency value must be of type Float (f32)".to_string(),
-                msg: err.to_string(),
-                span: Some(frequency.span()),
-            }))
+    let duration_value = match duration {
+        Value::Duration { val, .. } => Duration::from_nanos(val.try_into().unwrap_or(0)),
+        _ => {
+            return Err(Err(LabeledError::new(
+                "cannot parse duration value as Duration",
+            )))
         }
     };
+
     let amplify: Value = match call.get_flag("amplify") {
         Ok(value) => match value {
             Some(value) => value,
             None => Value::float(1.0, Span::unknown()),
         },
         Err(err) => {
-            return Err(Err(LabeledError {
-                label: "Duration value not found".to_string(),
-                msg: err.to_string(),
-                span: Some(call.head),
-            }))
+            return Err(Err(LabeledError::new(err.to_string())
+                .with_label("Duration value not found", call.head)))
         }
     };
     let amplify_value: f32 = match amplify.as_float() {
         Ok(value) => value as f32,
         Err(err) => {
-            return Err(Err(LabeledError {
-                label: "Frequency value must be of type Float (f32)".to_string(),
-                msg: err.to_string(),
-                span: Some(frequency.span()),
-            }))
+            return Err(Err(LabeledError::new(err.to_string()).with_label(
+                "Amplify value must be of type Float (f32)",
+                amplify.span(),
+            )))
         }
     };
     Ok((frequency_value, duration_value, amplify_value))

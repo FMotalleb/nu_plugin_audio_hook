@@ -1,5 +1,6 @@
 [dependencies]
 nu-plugin = "0.93"
+chrono = "0.4.38"
 
 [dependencies.id3]
 version = "1.10.0"
