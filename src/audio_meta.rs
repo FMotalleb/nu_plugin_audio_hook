@@ -81,7 +81,7 @@ fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
         Ok(value) => value,
         Err(value) => return value,
     };
-    let tags = match Tag::read_from(file_value) {
+    let tags = match Tag::read_from2(file_value) {
         Ok(tags) => Some(tags),
         Err(_) => None,
     };
@@ -153,7 +153,7 @@ fn audio_meta_set(call: &EvaluatedCall) -> Result<Value, LabeledError> {
                 .with_label("cannot get value of value", call.head));
         }
     };
-    let tags = match Tag::read_from(file_value) {
+    let tags = match Tag::read_from2(file_value) {
         Ok(tags) => Some(tags),
         Err(_) => None,
     };
