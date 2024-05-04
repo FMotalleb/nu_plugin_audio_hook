@@ -1,8 +1,9 @@
 [dependencies]
 nu-plugin = "0.93"
+chrono = "0.4.38"
 
 [dependencies.id3]
-version = "1.10.0"
+version = "1.13.1"
 
 [dependencies.lazy_static]
 version = "1.4.0"
