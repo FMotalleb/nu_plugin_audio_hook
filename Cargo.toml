@@ -1,5 +1,5 @@
 [dependencies]
-nu-plugin = "0.90.1"
+nu-plugin = "0.93"
 
 [dependencies.id3]
 version = "1.10.0"
@@ -12,7 +12,7 @@ version = "0.1.10"
 
 [dependencies.nu-protocol]
 features = ["plugin"]
-version = "0.90.1"
+version = "0.93"
 
 [dependencies.rodio]
 version = "0.17.3"

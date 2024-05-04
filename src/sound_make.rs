@@ -1,11 +1,73 @@
-use nu_plugin::{self, EvaluatedCall, LabeledError};
-use nu_protocol::{Span, Value};
+use nu_plugin::{self, EvaluatedCall, LabeledError, PluginCommand, SimplePluginCommand};
+use nu_protocol::{Signature, Span, Value};
 use rodio::source::{SineWave, Source};
 use rodio::{OutputStream, Sink};
 
 use std::time::Duration;
 
-pub fn make_sound(call: &EvaluatedCall) -> Result<Value, LabeledError> {
+use crate::Sound;
+
+pub struct SoundMakeCmd;
+
+impl SimplePluginCommand for SoundMakeCmd {
+    type Plugin = Sound;
+
+    fn name(&self) -> &str {
+        "sound make"
+    }
+
+    fn signature(&self) -> nu_protocol::Signature {
+        Signature::new("sound make")
+                .required("Frequency", SyntaxShape::Float, "Frequency of the noise")
+                .required("duration", SyntaxShape::Duration, "duration of the noise")
+                .named(
+                    "amplify",
+                    SyntaxShape::Float,
+                    "amplify the sound by given value",
+                    Some('a'),
+                ).named(
+                    "beep",
+                    SyntaxShape::Float,
+                    "just a beep sound",
+                    Some('b'),
+                )
+                .plugin_examples(
+                    vec![
+                        PluginExample {
+                            description: "create a simple noise frequency".to_string(),
+                            example: "sound make 1000 200ms".to_string(),
+                            result: None,
+                        },
+                        PluginExample {
+                            description: "create a simple noise sequence".to_string(),
+                            example: "[ 300.0, 500.0,  1000.0, 400.0, 600.0 ] | each { |it| sound make $it 150ms }".to_string(),
+                            result: None,
+                        },
+                    ]
+                )
+                .category(Category::Experimental)
+    }
+
+    fn usage(&self) -> &str {
+        "creates a noise with given frequency and duration"
+    }
+
+    fn run(
+        &self,
+        plugin: &Self::Plugin,
+        engine: &nu_plugin::EngineInterface,
+        call: &EvaluatedCall,
+        input: &Value,
+    ) -> Result<Value, nu_protocol::LabeledError> {
+        if let Ok(true) = call.has_flag("beep") {
+            sine_wave(1000.0, Duration::from_millis(300), 1.0);
+            return Ok(Value::nothing(call.head));
+        }
+        make_sound(call)
+    }
+}
+
+fn make_sound(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     let (frequency_value, duration_value, amplify_value) = match load_values(call) {
         Ok(value) => value,
         Err(value) => return value,
@@ -15,7 +77,7 @@ pub fn make_sound(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     Ok(Value::nothing(call.head))
 }
 
-pub fn sine_wave(frequency_value: f32, duration_value: Duration, amplify_value: f32) {
+fn sine_wave(frequency_value: f32, duration_value: Duration, amplify_value: f32) {
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
     let source = SineWave::new(frequency_value)

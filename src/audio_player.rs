@@ -1,10 +1,58 @@
-use nu_plugin::{self, EvaluatedCall, LabeledError};
-use nu_protocol::Value;
+use nu_plugin::{self, EvaluatedCall, LabeledError, SimplePluginCommand};
+use nu_protocol::{Signature, Value};
 use rodio::{source::Source, Decoder, OutputStream};
 
 use std::{fs::File, io::BufReader, time::Duration};
 
-pub fn play_audio(call: &EvaluatedCall) -> Result<Value, LabeledError> {
+pub struct SoundPlayCmd;
+impl SimplePluginCommand for SoundPlayCmd {
+    type Plugin = Sound;
+
+    fn name(&self) -> &str {
+        "sound play"
+    }
+
+    fn signature(&self) -> nu_protocol::Signature {
+        Signature::new("sound play")
+            .required("File Path", SyntaxShape::Filepath, "file to play")
+            .named(
+                "duration",
+                SyntaxShape::Duration,
+                "duration of file (mandatory for non-wave formats like mp3) (default 1 hour)",
+                Some('d'),
+            )
+            .plugin_examples(vec![
+                PluginExample {
+                    description: "play a sound and exits after 5min".to_string(),
+                    example: "sound play audio.mp4 -d 5min".to_string(),
+                    result: None,
+                },
+                PluginExample {
+                    description: "play a sound for its duration".to_string(),
+                    example: "sound meta audio.mp4 | sound play audio.mp3 -d $in.duration"
+                        .to_string(),
+                    result: None,
+                },
+            ])
+            .category(Category::Experimental)
+    }
+
+    fn usage(&self) -> &str {
+        "play an audio file, by default supports flac,Wav,mp3 and ogg files, install plugin with `all-decoders` feature to include aac and mp4(audio)"
+    }
+
+    fn run(
+        &self,
+        plugin: &Self::Plugin,
+        engine: &nu_plugin::EngineInterface,
+        call: &EvaluatedCall,
+        input: &Value,
+    ) -> Result<Value, nu_protocol::LabeledError> {
+        play_audio(call)
+    }
+}
+
+fn play_audio(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     let (file_span, file_value) = match load_file(call) {
         Ok(value) => value,
         Err(value) => return value,

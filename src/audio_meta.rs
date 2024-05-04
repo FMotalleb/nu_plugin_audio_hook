@@ -1,11 +1,79 @@
 use id3::{Tag, TagLike};
-use nu_plugin::{self, EvaluatedCall, LabeledError};
-use nu_protocol::{record, Record, Span, Value};
+use nu_plugin::{self, EvaluatedCall, LabeledError, SimplePluginCommand};
+use nu_protocol::{record, Record, Signature, Span, SyntaxShape, Value};
 use std::{fs::File, path::PathBuf};
 
-use crate::constants::ID3_HASHMAP;
+use crate::{constants::ID3_HASHMAP, Sound};
+pub struct SoundMetaSetCmd;
+impl SimplePluginCommand for SoundMetaSetCmd {
+    type Plugin = Sound;
 
-pub fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
+    fn name(&self) -> &str {
+        "sound meta set"
+    }
+
+    fn signature(&self) -> nu_protocol::Signature {
+        Signature::new("sound meta set")
+            .required("File Path", SyntaxShape::Filepath, "file to update")
+            .required_named("key", SyntaxShape::String, "id3 key", Some('k'))
+            .required_named("value", SyntaxShape::String, "id3 value", Some('v'))
+            .category(Category::Experimental)
+    }
+
+    fn usage(&self) -> &str {
+        "set a id3 frame on an audio file"
+    }
+
+    fn run(
+        &self,
+        plugin: &Self::Plugin,
+        engine: &nu_plugin::EngineInterface,
+        call: &EvaluatedCall,
+        input: &Value,
+    ) -> Result<Value, nu_protocol::LabeledError> {
+        audio_meta_set(call)
+    }
+}
+
+pub struct SoundMetaGetCmd;
+impl SimplePluginCommand for SoundMetaGetCmd {
+    type Plugin = Sound;
+
+    fn name(&self) -> &str {
+        "sound meta"
+    }
+
+    fn signature(&self) -> Signature {
+        Signature::new("sound meta")
+            .named(
+                "all",
+                SyntaxShape::Nothing,
+                "List all possible frame names",
+                Some('a'),
+            )
+            .required("File Path", SyntaxShape::Filepath, "file to play")
+            .category(Category::Experimental)
+    }
+
+    fn usage(&self) -> &str {
+        "get duration and meta data of an audio file"
+    }
+
+    fn run(
+        &self,
+        plugin: &Self::Plugin,
+        engine: &nu_plugin::EngineInterface,
+        call: &EvaluatedCall,
+        input: &Value,
+    ) -> Result<Value, nu_protocol::LabeledError> {
+        if let Ok(true) = call.has_flag("all") {
+            Ok(get_meta_records(call.head))
+        }
+        parse_meta(call)
+    }
+}
+
+fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     let (_, file_value) = match load_file(call) {
         Ok(value) => value,
         Err(value) => return value,
@@ -62,7 +130,8 @@ pub fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     Ok(Value::record(other, call.head))
     // Ok(Value::nothing(call.head))
 }
-pub fn audio_meta_set(call: &EvaluatedCall) -> Result<Value, LabeledError> {
+
+fn audio_meta_set(call: &EvaluatedCall) -> Result<Value, LabeledError> {
     let (_, file_value) = match load_file(call) {
         Ok(value) => value,
         Err(value) => return value,
