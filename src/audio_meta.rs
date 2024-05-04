@@ -48,13 +48,8 @@ impl SimplePluginCommand for SoundMetaGetCmd {
 
     fn signature(&self) -> Signature {
         Signature::new("sound meta")
-            .named(
-                "all",
-                SyntaxShape::Nothing,
-                "List all possible frame names",
-                Some('a'),
-            )
-            .required("File Path", SyntaxShape::Filepath, "file to play")
+            .switch("all", "List all possible frame names", Some('a'))
+            .optional("File Path", SyntaxShape::Filepath, "file to play")
             .category(Category::Experimental)
     }
 
