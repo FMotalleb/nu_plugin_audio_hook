@@ -1,5 +1,5 @@
 [dependencies]
-nu-plugin = "0.93"
+nu-plugin = "0.94"
 chrono = "0.4.38"
 
 [dependencies.id3]
@@ -13,10 +13,10 @@ version = "0.1.10"
 
 [dependencies.nu-protocol]
 features = ["plugin"]
-version = "0.93"
+version = "0.94"
 
 [dependencies.rodio]
-version = "0.17.3"
+version = "0.18.1"
 
 [features]
 all-decoders = ["default", "symphonia-all"]
