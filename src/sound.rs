@@ -21,4 +21,8 @@ impl Plugin for Sound {
             Box::new(SoundMetaSetCmd {}),
         ]
     }
+
+    fn version(&self) -> String {
+        env!("CARGO_PKG_VERSION").into()
+    }
 }
