@@ -1164,7 +1164,7 @@ dependencies = [
 
 [[package]]
 name = "nu_plugin_audio_hook"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "chrono",
  "id3",
@@ -1589,9 +1589,9 @@ dependencies = [
 
 [[package]]
 name = "rodio"
-version = "0.18.1"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1fceb9d127d515af1586d8d0cc601e1245bdb0af38e75c865a156290184f5b3"
+checksum = "6006a627c1a38d37f3d3a85c6575418cfe34a5392d60a686d0071e1c8d427acb"
 dependencies = [
  "claxon",
  "cpal",
