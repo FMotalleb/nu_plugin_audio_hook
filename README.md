@@ -111,12 +111,12 @@ nupm install --path nu_plugin_audio_hook -f
 git clone https://github.com/FMotalleb/nu_plugin_audio_hook.git
 cd nu_plugin_audio_hook
 cargo build -r --features=all-decoders
-register target/debug/nu_plugin_audio_hook 
+plugin add target/debug/nu_plugin_audio_hook 
 ```
 
 * or using cargo
 
 ```bash
 cargo install nu_plugin_audio_hook --features=all-decoders
-register ~/.cargo/bin/nu_plugin_audio_hook
+plugin add ~/.cargo/bin/nu_plugin_audio_hook
 ```
