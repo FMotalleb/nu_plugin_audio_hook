@@ -23,7 +23,7 @@ impl SimplePluginCommand for SoundMetaSetCmd {
             .category(Category::Experimental)
     }
 
-    fn usage(&self) -> &str {
+    fn description(&self) -> &str {
         "set a id3 frame on an audio file"
     }
 
@@ -53,7 +53,7 @@ impl SimplePluginCommand for SoundMetaGetCmd {
             .category(Category::Experimental)
     }
 
-    fn usage(&self) -> &str {
+    fn description(&self) -> &str {
         "get duration and meta data of an audio file"
     }
 

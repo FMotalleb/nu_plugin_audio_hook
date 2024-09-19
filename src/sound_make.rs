@@ -43,7 +43,7 @@ impl SimplePluginCommand for SoundMakeCmd {
             },
         ]
     }
-    fn usage(&self) -> &str {
+    fn description(&self) -> &str {
         "creates a noise with given frequency and duration"
     }
 
@@ -77,7 +77,7 @@ impl SimplePluginCommand for SoundBeepCmd {
             result: None,
         }]
     }
-    fn usage(&self) -> &str {
+    fn description(&self) -> &str {
         "creates a beep noise"
     }
 
