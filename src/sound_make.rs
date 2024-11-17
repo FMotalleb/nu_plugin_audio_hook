@@ -121,7 +121,7 @@ fn load_values(call: &EvaluatedCall) -> Result<(f32, Duration, f32), Result<Valu
                 .with_label("Frequency value not found", call.head)))
         }
     };
-    let frequency_value: f32 = match frequency.as_f64() {
+    let frequency_value: f32 = match frequency.as_float() {
         Ok(value) => value as f32,
         Err(err) => {
             return Err(Err(LabeledError::new(err.to_string()).with_label(
