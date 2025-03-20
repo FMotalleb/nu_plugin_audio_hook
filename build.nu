@@ -16,7 +16,6 @@ def main [package_file: path = nupm.nuon] {
     let install_root = $env.NUPM_HOME | path join "plugins"
 
     let name = open ($repo_root | path join "Cargo.toml") | get package.name
-    echo sel
     let features = $features | input list --multi "select cargo features"
 
    
