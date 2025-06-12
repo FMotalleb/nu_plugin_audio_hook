@@ -28,7 +28,7 @@ impl SimplePluginCommand for SoundMakeCmd {
             )
             .category(Category::Experimental)
     }
-    fn examples(&self) -> Vec<Example> {
+    fn examples(&self) -> Vec<Example<'_>> {
         vec![
             Example {
                 description: "create a simple noise frequency",
@@ -70,7 +70,7 @@ impl SimplePluginCommand for SoundBeepCmd {
     fn signature(&self) -> nu_protocol::Signature {
         Signature::new("sound beep").category(Category::Experimental)
     }
-    fn examples(&self) -> Vec<Example> {
+    fn examples(&self) -> Vec<Example<'_>> {
         vec![Example {
             description: "create a simple beep sound",
             example: "sound beep",

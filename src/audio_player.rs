@@ -25,7 +25,7 @@ impl SimplePluginCommand for SoundPlayCmd {
             )
             .category(Category::Experimental)
     }
-    fn examples(&self) -> Vec<Example> {
+    fn examples(&self) -> Vec<Example<'_>> {
         vec![
             Example {
                 description: "play a sound and exits after 5min",
