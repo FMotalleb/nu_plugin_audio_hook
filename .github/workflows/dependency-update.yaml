@@ -9,6 +9,10 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      - name: Install ALSA packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y alsa-utils libasound2-dev
       - name: Setup Nushell
         uses: hustcer/setup-nu@main
         with:
