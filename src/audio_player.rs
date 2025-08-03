@@ -1,4 +1,5 @@
-use nu_plugin::{self, EvaluatedCall, SimplePluginCommand};
+use chrono::Utc;
+use nu_plugin::{self, EngineInterface, EvaluatedCall, SimplePluginCommand};
 use nu_protocol::{Category, Example, LabeledError, Signature, SyntaxShape, Value};
 use rodio::{source::Source, Decoder, OutputStream};
 
@@ -46,15 +47,15 @@ impl SimplePluginCommand for SoundPlayCmd {
     fn run(
         &self,
         _plugin: &Self::Plugin,
-        _engine: &nu_plugin::EngineInterface,
+        engine: &EngineInterface,
         call: &EvaluatedCall,
         _input: &Value,
     ) -> Result<Value, nu_protocol::LabeledError> {
-        play_audio(call)
+        play_audio(engine, call)
     }
 }
 
-fn play_audio(call: &EvaluatedCall) -> Result<Value, LabeledError> {
+fn play_audio(engine: &EngineInterface, call: &EvaluatedCall) -> Result<Value, LabeledError> {
     let (file_span, file_value) = match load_file(call) {
         Ok(value) => value,
         Err(value) => return value,
@@ -98,7 +99,14 @@ fn play_audio(call: &EvaluatedCall) -> Result<Value, LabeledError> {
         },
     };
 
-    std::thread::sleep(sleep_duration);
+    let sleep_until = Utc::now() + sleep_duration;
+
+    // We check for OS signals
+    while engine.signals().check(&call.head).map(|_| true)? && Utc::now() < sleep_until {
+        // We yield to the OS until necessary
+        std::thread::yield_now();
+    }
+
     Ok(Value::nothing(call.head))
 }
 fn load_duration_from(call: &EvaluatedCall, name: &str) -> Option<Duration> {
