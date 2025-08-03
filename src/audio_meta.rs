@@ -90,10 +90,11 @@ fn parse_meta(call: &EvaluatedCall) -> Result<Value, LabeledError> {
         Ok(duration) => duration,
         Err(err) => err.at_duration,
     };
-    other.push(
-        "duration",
-        Value::duration(duration.as_nanos().try_into().unwrap(), call.head),
-    );
+    let duration_nanos = duration.as_nanos().try_into().map_err(|e| {
+        LabeledError::new(format!("Failed to convert duration: {e}"))
+            .with_label("duration conversion error", call.head)
+    })?;
+    other.push("duration", Value::duration(duration_nanos, call.head));
     // let info;
     match tags {
         Some(tags) => {
@@ -160,11 +161,10 @@ fn audio_meta_set(call: &EvaluatedCall) -> Result<Value, LabeledError> {
             Ok(value) => value,
             Err(value) => return value,
         };
-        let tt = tags.write_to_path(path, tags.version());
-        if tt.is_err() {
-            return Err(LabeledError::new(tt.err().unwrap().to_string())
-                .with_label("error during writing", call.head));
-        }
+        let tr = tags.write_to_path(path, tags.version());
+        tr.map_err(|e| {
+            LabeledError::new(e.to_string()).with_label("error during writing", call.head)
+        })?
     }
     parse_meta(call)
 }
