@@ -106,6 +106,7 @@ fn play_audio(engine: &EngineInterface, call: &EvaluatedCall) -> Result<(), Labe
 
     Ok(())
 }
+
 fn load_duration_from(call: &EvaluatedCall, name: &str) -> Option<Duration> {
     match call.get_flag_value(name) {
         Some(Value::Duration { val, .. }) => {
@@ -114,6 +115,7 @@ fn load_duration_from(call: &EvaluatedCall, name: &str) -> Option<Duration> {
         _ => None,
     }
 }
+
 fn load_file(engine: &EngineInterface, call: &EvaluatedCall) -> Result<(Span, File), LabeledError> {
     let file_path: Value = call.req(0).map_err(|e| {
         LabeledError::new(e.to_string()).with_label("Expected file path", call.head)
@@ -122,25 +124,40 @@ fn load_file(engine: &EngineInterface, call: &EvaluatedCall) -> Result<(Span, Fi
     let span = file_path.span();
 
     let file_path = match file_path {
-        Value::String { val, .. } => Ok(PathBuf::from_str(&val).unwrap()),
+        Value::String { val, .. } => PathBuf::from_str(&val)
+            .map_err(|e| LabeledError::new(e.to_string()).with_label("Invalid path format", span)),
         _ => Err(LabeledError::new("invalid input").with_label("Expected file path", span)),
     }?;
 
-    let file_path = if file_path.is_absolute() {
-        file_path
-    } else {
-        PathBuf::from_str(&engine.get_current_dir().map_err(|e| {
-            LabeledError::new(e.to_string()).with_label("Could not get current directory", span)
-        })?)
-        .unwrap()
-        .join(file_path)
-    }
-    .canonicalize()
-    .map_err(|e| LabeledError::new(e.to_string()).with_label("File not found", span))?;
+    let file_path = resolve_filepath(engine, span, file_path)?;
 
     let file_handle = File::open(file_path).map_err(|e| {
         LabeledError::new(e.to_string()).with_label("error trying to open the file", span)
     })?;
 
     Ok((span, file_handle))
+}
+
+fn resolve_filepath(
+    engine: &EngineInterface,
+    span: Span,
+    file_path: PathBuf,
+) -> Result<PathBuf, LabeledError> {
+    let file_path = if file_path.is_absolute() {
+        Ok::<PathBuf, LabeledError>(file_path)
+    } else {
+        let current_path = engine.get_current_dir().map_err(|e| {
+            LabeledError::new(e.to_string()).with_label("Could not get current directory", span)
+        })?;
+        let base = PathBuf::from_str(current_path.as_str()).map_err(|e| {
+            LabeledError::new(e.to_string()).with_label(
+                "Could not convert path provided by engine to PathBuf object (issue in nushell)",
+                span,
+            )
+        })?;
+        Ok(base.join(file_path))
+    }?
+    .canonicalize()
+    .map_err(|e| LabeledError::new(e.to_string()).with_label("File not found", span))?;
+    Ok(file_path)
 }
