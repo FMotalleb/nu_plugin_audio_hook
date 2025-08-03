@@ -1,9 +1,9 @@
 use chrono::Utc;
 use nu_plugin::{self, EngineInterface, EvaluatedCall, SimplePluginCommand};
-use nu_protocol::{Category, Example, LabeledError, Signature, SyntaxShape, Value};
+use nu_protocol::{Category, Example, LabeledError, Signature, Span, SyntaxShape, Value};
 use rodio::{source::Source, Decoder, OutputStream};
 
-use std::{fs::File, io::BufReader, time::Duration};
+use std::{fs::File, io::BufReader, path::PathBuf, str::FromStr, time::Duration};
 
 use crate::Sound;
 
@@ -51,15 +51,12 @@ impl SimplePluginCommand for SoundPlayCmd {
         call: &EvaluatedCall,
         _input: &Value,
     ) -> Result<Value, nu_protocol::LabeledError> {
-        play_audio(engine, call)
+        play_audio(engine, call).map(|_| Value::nothing(call.head))
     }
 }
 
-fn play_audio(engine: &EngineInterface, call: &EvaluatedCall) -> Result<Value, LabeledError> {
-    let (file_span, file_value) = match load_file(call) {
-        Ok(value) => value,
-        Err(value) => return value,
-    };
+fn play_audio(engine: &EngineInterface, call: &EvaluatedCall) -> Result<(), LabeledError> {
+    let (file_span, file_value) = load_file(engine, call)?;
 
     let (_stream, stream_handle) = match OutputStream::try_default() {
         Ok(value) => value,
@@ -107,8 +104,9 @@ fn play_audio(engine: &EngineInterface, call: &EvaluatedCall) -> Result<Value, L
         std::thread::yield_now();
     }
 
-    Ok(Value::nothing(call.head))
+    Ok(())
 }
+
 fn load_duration_from(call: &EvaluatedCall, name: &str) -> Option<Duration> {
     match call.get_flag_value(name) {
         Some(Value::Duration { val, .. }) => {
@@ -117,26 +115,49 @@ fn load_duration_from(call: &EvaluatedCall, name: &str) -> Option<Duration> {
         _ => None,
     }
 }
-fn load_file(
-    call: &EvaluatedCall,
-) -> Result<(nu_protocol::Span, File), Result<Value, LabeledError>> {
-    let file: Value = match call.req(0) {
-        Ok(value) => value,
-        Err(err) => {
-            return Err(Err(LabeledError::new(err.to_string())
-                .with_label("Frequency value not found", call.head)))
-        }
-    };
-    let file_span = file.span();
-    let file_value: File = match file {
-        Value::String { val, .. } => match File::open(val) {
-            Ok(file) => file,
-            Err(err) => {
-                return Err(Err(LabeledError::new(err.to_string())
-                    .with_label("error trying to open the file", file_span)))
-            }
-        },
-        _ => return Err(Err(LabeledError::new("cannot access file path"))),
-    };
-    Ok((file_span, file_value))
+
+fn load_file(engine: &EngineInterface, call: &EvaluatedCall) -> Result<(Span, File), LabeledError> {
+    let file_path: Value = call.req(0).map_err(|e| {
+        LabeledError::new(e.to_string()).with_label("Expected file path", call.head)
+    })?;
+
+    let span = file_path.span();
+
+    let file_path = match file_path {
+        Value::String { val, .. } => PathBuf::from_str(&val)
+            .map_err(|e| LabeledError::new(e.to_string()).with_label("Invalid path format", span)),
+        _ => Err(LabeledError::new("invalid input").with_label("Expected file path", span)),
+    }?;
+
+    let file_path = resolve_filepath(engine, span, file_path)?;
+
+    let file_handle = File::open(file_path).map_err(|e| {
+        LabeledError::new(e.to_string()).with_label("error trying to open the file", span)
+    })?;
+
+    Ok((span, file_handle))
+}
+
+fn resolve_filepath(
+    engine: &EngineInterface,
+    span: Span,
+    file_path: PathBuf,
+) -> Result<PathBuf, LabeledError> {
+    let file_path = if file_path.is_absolute() {
+        Ok::<PathBuf, LabeledError>(file_path)
+    } else {
+        let current_path = engine.get_current_dir().map_err(|e| {
+            LabeledError::new(e.to_string()).with_label("Could not get current directory", span)
+        })?;
+        let base = PathBuf::from_str(current_path.as_str()).map_err(|e| {
+            LabeledError::new(e.to_string()).with_label(
+                "Could not convert path provided by engine to PathBuf object (issue in nushell)",
+                span,
+            )
+        })?;
+        Ok(base.join(file_path))
+    }?
+    .canonicalize()
+    .map_err(|e| LabeledError::new(e.to_string()).with_label("File not found", span))?;
+    Ok(file_path)
 }
