@@ -1,9 +1,9 @@
 use chrono::Utc;
 use nu_plugin::{self, EngineInterface, EvaluatedCall, SimplePluginCommand};
 use nu_protocol::{Category, Example, LabeledError, Signature, SyntaxShape, Value};
-use rodio::{source::Source, Decoder, OutputStream};
+use rodio::{source::Source, Decoder, OutputStreamBuilder};
 
-use std::{fs::File, io::BufReader, time::Duration};
+use std::{fs::File, time::Duration};
 
 use crate::Sound;
 
@@ -56,12 +56,12 @@ impl SimplePluginCommand for SoundPlayCmd {
 }
 
 fn play_audio(engine: &EngineInterface, call: &EvaluatedCall) -> Result<Value, LabeledError> {
-    let (file_span, file_value) = match load_file(call) {
+    let (file_span, file) = match load_file(call) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
-    let (_stream, stream_handle) = match OutputStream::try_default() {
+    let output_stream = match OutputStreamBuilder::open_default_stream() {
         Ok(value) => value,
         Err(err) => {
             return Err(
@@ -69,9 +69,8 @@ fn play_audio(engine: &EngineInterface, call: &EvaluatedCall) -> Result<Value, L
             )
         }
     };
-    let file = BufReader::new(file_value);
 
-    let source = match Decoder::new(file) {
+    let source = match Decoder::try_from(file) {
         Ok(value) => value,
         Err(err) => {
             return Err(
@@ -81,15 +80,7 @@ fn play_audio(engine: &EngineInterface, call: &EvaluatedCall) -> Result<Value, L
     };
 
     let duration = source.total_duration();
-
-    match stream_handle.play_raw(source.convert_samples()) {
-        Ok(_) => {}
-        Err(err) => {
-            return Err(
-                LabeledError::new(err.to_string()).with_label("audio player exception", file_span)
-            )
-        }
-    }
+    output_stream.mixer().add(source);
 
     let sleep_duration: Duration = match load_duration_from(call, "duration") {
         Some(duration) => duration,

@@ -1,7 +1,7 @@
 use nu_plugin::{self, EvaluatedCall, SimplePluginCommand};
 use nu_protocol::{Category, Example, LabeledError, Signature, Span, SyntaxShape, Value};
 use rodio::source::{SineWave, Source};
-use rodio::{OutputStream, Sink};
+use rodio::{OutputStreamBuilder, Sink};
 
 use std::time::Duration;
 
@@ -88,7 +88,7 @@ impl SimplePluginCommand for SoundBeepCmd {
         call: &EvaluatedCall,
         _input: &Value,
     ) -> Result<Value, nu_protocol::LabeledError> {
-        sine_wave(1000.0, Duration::from_millis(300), 1.0);
+        sine_wave(1000.0, Duration::from_millis(300), 1.0)?;
         return Ok(Value::nothing(call.head));
     }
 }
@@ -99,18 +99,26 @@ fn make_sound(call: &EvaluatedCall) -> Result<Value, LabeledError> {
         Err(value) => return value,
     };
 
-    sine_wave(frequency_value, duration_value, amplify_value);
+    sine_wave(frequency_value, duration_value, amplify_value)?;
     Ok(Value::nothing(call.head))
 }
 
-fn sine_wave(frequency_value: f32, duration_value: Duration, amplify_value: f32) {
-    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-    let sink = Sink::try_new(&stream_handle).unwrap();
+fn sine_wave(
+    frequency_value: f32,
+    duration_value: Duration,
+    amplify_value: f32,
+) -> Result<(), LabeledError> {
+    let stream_handle = OutputStreamBuilder::open_default_stream().map_err(|err| {
+        LabeledError::new(err.to_string()).with_label("audio stream exception", Span::unknown())
+    })?;
+
+    let sink = Sink::connect_new(stream_handle.mixer());
     let source = SineWave::new(frequency_value)
         .take_duration(duration_value)
         .amplify(amplify_value);
     sink.append(source);
     sink.sleep_until_end();
+    Ok(())
 }
 
 fn load_values(call: &EvaluatedCall) -> Result<(f32, Duration, f32), Result<Value, LabeledError>> {
